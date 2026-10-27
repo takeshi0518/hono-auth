@@ -1,6 +1,6 @@
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
-import { getCookie, setCookie } from "hono/cookie";
+import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 
 const app = new Hono();
 
@@ -55,4 +55,15 @@ app.get("/me", (c) => {
   return c.json({ id: user.id, email: user.email, name: user.name });
 });
 
+//ログアウト
+app.post("/logout", (c) => {
+  const sessionId = getCookie(c, "session_id");
+  if (sessionId) sessions.delete(sessionId);
 
+  deleteCookie(c, "session_id", { path: "/" });
+  return c.json({ message: "ログアウトしました" });
+});
+
+serve({ fetch: app.fetch, port: 3000 }, (info) => {
+  console.log(`http://localhost:${info.port}`);
+});
