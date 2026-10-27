@@ -1,6 +1,6 @@
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
-import { setCookie } from "hono/cookie";
+import { getCookie, setCookie } from "hono/cookie";
 
 const app = new Hono();
 
@@ -37,6 +37,22 @@ app.post("/login", async (c) => {
   });
 
   return c.json({ message: "ログインしました" });
+});
+
+//ログイン中のユーザー情報
+app.get("/me", (c) => {
+  const sessionId = getCookie(c, "session_id");
+  if (!sessionId) {
+    return c.json({ message: "未ログインです" }, 401);
+  }
+
+  const userId = sessions.get(sessionId);
+  const user = USERS.find((u) => u.id === userId);
+  if (!user) {
+    return c.json({ message: "セッションが無効です" }, 401);
+  }
+
+  return c.json({ id: user.id, email: user.email, name: user.name });
 });
 
 
