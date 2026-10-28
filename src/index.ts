@@ -37,7 +37,7 @@ const requireAuth = createMiddleware<Env>(async (c, next) => {
   await next();
 });
 
-// app.use("/api/*", requireAuth);
+app.use("/api/*", requireAuth);
 
 //ログイン
 app.post("/login", async (c) => {
@@ -66,23 +66,14 @@ app.post("/login", async (c) => {
 });
 
 //ログイン中のユーザー情報
-app.get("/me", requireAuth, (c) => {
+app.get("/api/me", (c) => {
   return c.json(c.get("user"));
 });
 
-// app.get("/api/me", (c) => {
-//   return c.json(c.get("user"));
-// });
-
-app.get("/secret", requireAuth, (c) => {
+app.get("/api/secret", (c) => {
   const user = c.get("user");
   return c.json({ message: `${user.name}さん専用のページです` });
 });
-
-// app.get("/api/secret", (c) => {
-//   const user = c.get("user");
-//   return c.json({ message: `${user.name}さん専用のページです` });
-// });
 
 //ログアウト
 app.post("/logout", (c) => {
