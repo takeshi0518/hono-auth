@@ -1,8 +1,18 @@
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
+import { createMiddleware } from "hono/factory";
 
-const app = new Hono();
+type User = { id: number; email: string; name: string };
+
+//c.set / c.getで扱う値の型を定義
+type Env = {
+  Variables: {
+    user: User;
+  };
+};
+
+const app = new Hono<Env>();
 
 //固定ユーザー
 // ※パスワードを平文で持つのは学習用の仮実装
@@ -12,6 +22,22 @@ const USERS = [
 
 //セッションストア: sessionId -> userId
 const sessions = new Map<string, number>();
+
+//認証ミドルウェア
+const requireAuth = createMiddleware<Env>(async (c, next) => {
+  const sessionId = getCookie(c, "session_id");
+  const userId = sessionId ? sessions.get(sessionId) : undefined;
+  const found = USERS.find((u) => u.id === userId);
+
+  if (!found) {
+    return c.json({ message: "ログインが必要です" }, 401);
+  }
+
+  c.set("user", { id: found.id, email: found.email, name: found.name });
+  await next();
+});
+
+// app.use("/api/*", requireAuth);
 
 //ログイン
 app.post("/login", async (c) => {
@@ -40,20 +66,23 @@ app.post("/login", async (c) => {
 });
 
 //ログイン中のユーザー情報
-app.get("/me", (c) => {
-  const sessionId = getCookie(c, "session_id");
-  if (!sessionId) {
-    return c.json({ message: "未ログインです" }, 401);
-  }
-
-  const userId = sessions.get(sessionId);
-  const user = USERS.find((u) => u.id === userId);
-  if (!user) {
-    return c.json({ message: "セッションが無効です" }, 401);
-  }
-
-  return c.json({ id: user.id, email: user.email, name: user.name });
+app.get("/me", requireAuth, (c) => {
+  return c.json(c.get("user"));
 });
+
+// app.get("/api/me", (c) => {
+//   return c.json(c.get("user"));
+// });
+
+app.get("/secret", requireAuth, (c) => {
+  const user = c.get("user");
+  return c.json({ message: `${user.name}さん専用のページです` });
+});
+
+// app.get("/api/secret", (c) => {
+//   const user = c.get("user");
+//   return c.json({ message: `${user.name}さん専用のページです` });
+// });
 
 //ログアウト
 app.post("/logout", (c) => {
