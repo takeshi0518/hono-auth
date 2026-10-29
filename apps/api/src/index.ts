@@ -4,6 +4,7 @@ import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { createMiddleware } from "hono/factory";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+import { csrf } from "hono/csrf";
 
 type User = { id: number; email: string; name: string };
 
@@ -47,6 +48,7 @@ app.use(
     credentials: true,
   })
 );
+app.use(csrf({ origin: "http://localhost:5173" }));
 app.use("/api/*", requireAuth);
 
 //ログイン
