@@ -16,13 +16,16 @@ function App() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
+      credentials: "include",
     });
     const data = await res.json();
     setMessage(data.message);
   };
 
   const fetchMe = async () => {
-    const res = await fetch(`${API_URL}/api/me`);
+    const res = await fetch(`${API_URL}/api/me`, {
+      credentials: "include",
+    });
     if (!res.ok) {
       setUser(null);
       setMessage("未ログインです");
@@ -32,7 +35,10 @@ function App() {
   };
 
   const logout = async () => {
-    const res = await fetch(`${API_URL}/logout`, { method: "POST" });
+    const res = await fetch(`${API_URL}/logout`, {
+      method: "POST",
+      credentials: "include",
+    });
     const data = await res.json();
     setUser(null);
     setMessage(data.message);

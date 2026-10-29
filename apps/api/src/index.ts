@@ -2,6 +2,8 @@ import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { createMiddleware } from "hono/factory";
+import { cors } from "hono/cors";
+import { logger } from "hono/logger";
 
 type User = { id: number; email: string; name: string };
 
@@ -37,6 +39,14 @@ const requireAuth = createMiddleware<Env>(async (c, next) => {
   await next();
 });
 
+app.use(logger());
+app.use(
+  "*",
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
 app.use("/api/*", requireAuth);
 
 //ログイン
